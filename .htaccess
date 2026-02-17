@@ -1,0 +1,11 @@
+# --- HTTPSへの強制リダイレクト ---
+RewriteEngine on
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# --- db_config.php へのアクセス禁止 ---
+<Files "db_config.php">
+    deny from all
+</Files>
+
+Options -Indexes
