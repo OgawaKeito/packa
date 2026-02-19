@@ -1,84 +1,406 @@
-:root { --primary: #007bff; --success: #28a745; --bg: #f4f7f6; }
-body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: #333; margin: 0; padding: 20px; }
-.card { max-width: 450px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-h1 { text-align: center; color: var(--primary); margin-top: 0; cursor: pointer; transition: 0.3s; }
-h1:hover { opacity: 0.7; }
+@charset "UTF-8";
 
-/* 共通ボタン */
-.btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 15px; }
-.btn-primary { background: var(--primary); color: white; }
-.btn-success { background: var(--success); color: white; }
-.btn-outline { background: transparent; border: 1px solid #ccc; color: #666; }
-.btn:disabled { background: #ccc; cursor: not-allowed; }
+/* --- 変数定義 --- */
+:root {
+    --primary: #007bff;
+    --primary-hover: #0056b3;
+    --success: #28a745;
+    --success-hover: #218838;
+    --text-color: #333;
+    --bg-color: #f4f7f9; /* 少し青みがかったグレー */
+    --card-bg: #ffffff;
+    --border-color: #e9ecef;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+    --radius-md: 12px;
+    --radius-lg: 20px;
+}
 
-/* タブ・入力 */
-.tabs { display: flex; gap: 10px; margin: 20px 0; }
-.tabs button { flex: 1; padding: 10px; border: 2px solid #eee; border-radius: 8px; background: white; cursor: pointer; font-weight: bold; }
-.tabs button.active { border-color: var(--primary); background: #e7f3ff; color: var(--primary); }
-.input-group { margin: 20px 0; text-align: center; font-weight: bold; }
-.input-group input { width: 60px; padding: 8px; font-size: 1.1rem; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 30px 20px;
+    line-height: 1.5;
+}
 
-/* リスト表示 */
-.info-badge { background: #eee; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; display: inline-block; margin-bottom: 15px; font-weight: bold; }
-.item-list { list-style: none; padding: 0; margin: 0; }
-.item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; cursor: pointer; }
-.item input { margin-right: 15px; transform: scale(1.3); }
+/* --- メインカード --- */
+.card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 35px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
 
-/* アイテム追加 */
-.add-box { display: flex; gap: 5px; margin-bottom: 20px; }
-.add-box input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-.add-box button { width: 50px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
+h1 {
+    text-align: center;
+    color: var(--primary);
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s;
+    display: inline-block;
+    width: 100%;
+}
+h1:hover { transform: scale(1.02); }
 
-/* 共有ボックス */
-.share-box { margin-top: 20px; padding: 15px; background: #e7f3ff; border: 1px solid #b3d7ff; border-radius: 8px; font-size: 0.85rem; word-break: break-all; }
-.status-msg { text-align: center; color: var(--success); font-weight: bold; margin-top: 10px; }
-.item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; }
-.item-content { display: flex; align-items: center; flex: 1; cursor: pointer; }
+h3 { text-align: center; color: #555; margin-bottom: 20px; }
+
+/* --- ボタン類 --- */
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 15px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.btn:active:not(:disabled) { transform: translateY(0); }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: white;
+}
+.btn-success {
+    background: linear-gradient(135deg, var(--success), var(--success-hover));
+    color: white;
+}
+.btn-outline {
+    background: white;
+    border: 2px solid var(--border-color);
+    color: #666;
+    box-shadow: none;
+}
+.btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #f8faff;
+}
+.btn:disabled {
+    background: #dce2e6;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* --- タブ・入力エリア --- */
+.tabs { display: flex; gap: 10px; margin: 25px 0; }
+.tabs button {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: white;
+    cursor: pointer;
+    font-weight: bold;
+    color: #666;
+    transition: 0.2s;
+}
+.tabs button.active {
+    border-color: var(--primary);
+    background: #e7f3ff;
+    color: var(--primary);
+}
+
+.input-group { margin: 25px 0; text-align: center; font-weight: bold; color: #555; }
+.input-group input {
+    width: 70px;
+    padding: 10px;
+    font-size: 1.2rem;
+    text-align: center;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin: 0 10px;
+    font-weight: bold;
+    color: var(--primary);
+}
+.input-group input:focus { outline: none; border-color: var(--primary); }
+
+/* --- リストアイテム（カード風デザイン） --- */
+.item-list { list-style: none; padding: 0; margin: 20px 0; }
+
+.item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    margin-bottom: 10px; /* アイテム間に隙間 */
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+}
+/* ホバー時に少し浮き上がる */
+.item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: #dce2e6;
+    transform: translateY(-1px);
+}
+
+.item-content { display: flex; align-items: center; flex: 1; }
+
+/* --- ドラッグつまみ --- */
+.drag-handle {
+    cursor: grab;
+    margin-right: 15px;
+    color: #c4cdd5; /* 薄いグレー */
+    font-size: 1.4rem;
+    line-height: 1;
+    user-select: none;
+    transition: color 0.2s;
+    padding: 5px;
+}
+.item:hover .drag-handle { color: #a0aec0; } /* ホバーで少し濃く */
+.drag-handle:active { cursor: grabbing; color: var(--primary); }
+
+/* --- ドラッグ中の見た目 (SortableJS) --- */
+.sortable-ghost {
+    opacity: 1 !important;
+    background: #f0f9ff !important; /* 移動先を薄い青に */
+    border: 2px dashed var(--primary) !important;
+    box-shadow: none !important;
+}
+.sortable-chosen { /* 掴んでいるアイテム */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    transform: scale(1.02) !important;
+    z-index: 10;
+}
+
+
+/* --- ▼カスタムチェックボックス▼ --- */
+.checkbox-label {
+    display: flex; align-items: center; cursor: pointer; width: 100%; position: relative;
+}
+/* デフォルトのチェックボックスを隠す */
+.checkbox-label input[type="checkbox"] {
+    position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0;
+}
+/* カスタムチェックボックスの枠 */
+.custom-check {
+    height: 24px;
+    width: 24px;
+    background-color: white;
+    border: 2px solid #d1d9e0;
+    border-radius: 6px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0; /* 潰れないように */
+}
+/* チェックされた時の枠 */
+.checkbox-label input:checked ~ .custom-check {
+    background-color: var(--success);
+    border-color: var(--success);
+    box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3);
+}
+/* チェックマーク (CSSで描画) */
+.custom-check:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 9px;
+    top: 5px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+}
+/* チェックされたらマークを表示 */
+.checkbox-label input:checked ~ .custom-check:after {
+    display: block;
+}
+
+/* アイテムテキスト */
+.item-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+/* チェックされたらテキストを薄く */
+.item-text.checked {
+    color: #aaa;
+    text-decoration: line-through;
+}
+/* --- ▲カスタムチェックボックス終了▲ --- */
+
+
+/* --- 削除ボタン --- */
 .delete-btn {
-    background: none;
+    background: #fff0f0;
     border: none;
     color: #ff4d4d;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
     font-size: 1.2rem;
     cursor: pointer;
-    padding: 5px 10px;
     margin-left: 10px;
-    transition: 0.2s;
-    opacity: 0.6;
+    transition: all 0.2s;
+    opacity: 0; /* 通常は隠す */
 }
+/* アイテムホバー時のみ表示 */
+.item:hover .delete-btn { opacity: 1; }
 .delete-btn:hover {
-    opacity: 1;
-    transform: scale(1.2);
-}
-/* フッターのデザイン */
-footer {
-    margin-top: 40px;
-    text-align: center;
-    font-size: 0.8rem;
-    color: #888;
-}
-footer a {
-    color: var(--primary);
-    text-decoration: none;
-    margin: 0 10px;
+    background: #ff4d4d;
+    color: white;
+    transform: scale(1.1);
 }
 
-/* 規約モーダルのスタイル */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1000;
+/* --- 追加ボックス --- */
+.add-box { display: flex; gap: 10px; margin-bottom: 25px; }
+.add-box input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: 0.2s;
 }
-.modal-content {
-    background: white; padding: 20px; border-radius: 12px;
-    max-width: 90%; max-height: 80%; overflow-y: auto;
-    position: relative;
+.add-box input:focus { outline: none; border-color: var(--primary); }
+.add-box button {
+    width: 54px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+    transition: 0.2s;
 }
-.modal-close {
-    position: sticky; top: 0; float: right;
-    font-size: 1.5rem; cursor: pointer; color: #aaa;
+.add-box button:hover { background: var(--primary-hover); }
+
+/* --- その他 --- */
+.info-badge {
+    background: #e7f3ff;
+    color: var(--primary);
+    padding: 6px 15px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-bottom: 20px;
+    font-weight: bold;
 }
-.terms-text {
-    font-size: 0.85rem; line-height: 1.6; text-align: left;
+.share-box {
+    margin-top: 25px; padding: 20px;
+    background: #f0f9ff;
+    border: 2px dashed #b3d7ff;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    word-break: break-all;
+    color: #555;
+}
+.status-msg { text-align: center; color: var(--success); font-weight: bold; margin-top: 15px; font-size: 1.1rem;}
+footer { margin-top: 50px; text-align: center; font-size: 0.85rem; color: #999; }
+footer a { color: #777; text-decoration: none; margin: 0 10px; border-bottom: 1px dotted #ccc;}
+
+/* モーダル */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
+.modal-content { background: white; padding: 30px; border-radius: var(--radius-lg); max-width: 90%; width: 400px; max-height: 80%; overflow-y: auto; position: relative; box-shadow: var(--shadow-md); }
+.modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; cursor: pointer; color: #aaa; transition: 0.2s; }
+.modal-close:hover { color: #333; }
+
+/* --- 共有ボックスの改良 --- */
+.share-box {
+    margin-top: 25px;
+    padding: 20px;
+    background: #f0f9ff;
+    border: 2px dashed #b3d7ff;
+    border-radius: var(--radius-md);
+    color: #555;
+}
+.share-title {
+    margin: 0 0 10px 0;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: var(--primary);
+}
+
+/* URLとボタンを横並びにするラッパー */
+.url-copy-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+/* URL表示欄 */
+.url-input {
+    flex: 1; /* 横幅いっぱいに */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    color: #555;
+    font-size: 0.9rem;
+    outline: none;
+}
+.url-input:focus {
+    border-color: var(--primary);
+    background: #fff;
+}
+
+/* コピーボタン */
+.btn-copy {
+    width: 80px; /* 固定幅 */
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+.btn-copy:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+/* コピー完了時のスタイル（緑色にする） */
+.btn-copy.copied {
+    background: var(--success);
+    pointer-events: none; /* 連打防止 */
+}
+/* --- ボタン配置の調整 --- */
+.url-copy-wrapper {
+    display: flex;
+    gap: 8px; /* ボタン同士の間隔 */
+}
+
+/* --- 追加：開くボタン --- */
+.btn-open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none; /* 下線を消す */
+    width: 60px;           /* 幅を固定 */
+    background: white;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.btn-open:hover {
+    background: #e7f3ff;
+    transform: translateY(-1px);
 }

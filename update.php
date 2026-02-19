@@ -28,13 +28,14 @@ try {
     $stmtDel->execute([$share_id]);
 
     // 2. 最新のアイテムリストをインサート
-    $stmtIns = $pdo->prepare("INSERT INTO list_items (share_id, item_name, is_checked) VALUES (?, ?, ?)");
-    
-    foreach ($data['items'] as $item) {
+    $stmtIns = $pdo->prepare("INSERT INTO list_items (share_id, item_name, is_checked, sort_order) VALUES (?, ?, ?, ?)");
+
+    foreach ($data['items'] as $index => $item) {
         $stmtIns->execute([
             $share_id,
             $item['item_name'],
-            $item['checked'] ? 1 : 0
+            $item['checked'] ? 1 : 0,
+            $index // 並び順を保存
         ]);
     }
 

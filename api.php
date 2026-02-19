@@ -27,7 +27,7 @@ try {
         }
 
         // 2. アイテム一覧とチェック状態の取得
-        $stmtItems = $pdo->prepare("SELECT item_name, is_checked as checked FROM list_items WHERE share_id = ?");
+        $stmtItems = $pdo->prepare("SELECT item_name, is_checked as checked FROM list_items WHERE share_id = ? ORDER BY sort_order ASC");
         $stmtItems->execute([$id]);
         $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 

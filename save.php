@@ -33,13 +33,14 @@ try {
     ]);
 
     // 3. list_items テーブルに各アイテムのチェック状態を保存
-    $stmt2 = $pdo->prepare("INSERT INTO list_items (share_id, item_name, is_checked) VALUES (?, ?, ?)");
-    
-    foreach ($data['items'] as $item) {
+    $stmt2 = $pdo->prepare("INSERT INTO list_items (share_id, item_name, is_checked, sort_order) VALUES (?, ?, ?, ?)");
+
+    foreach ($data['items'] as $index => $item) { // $index を取得
         $stmt2->execute([
             $share_id,
             $item['item_name'],
-            $item['checked'] ? 1 : 0
+            $item['checked'] ? 1 : 0,
+            $index // これが並び順になります（0, 1, 2...）
         ]);
     }
 

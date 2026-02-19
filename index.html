@@ -1,26 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Packa | 旅の準備を爆速にする共有荷造りリスト</title>
 
     <meta name="description" content="Packaは宿泊数や目的地に合わせて持ち物リストを自動生成し、URL一つで仲間と共有・編集できるパッキングツールです。">
-    <meta name="keywords" content="旅行,持ち物,パッキング,チェックリスト,共有,Packa">
-    <meta name="author" content="Packa Project">
-
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://your-domain.lolipop.jp/packs/"> <meta property="og:title" content="Packa | 旅の準備を爆速にする共有荷造りリスト">
-    <meta property="og:description" content="「あれ持ったっけ？」をゼロに。宿泊数に合わせた自動計算リストを友達と共有しよう。">
-    <meta property="og:image" content="https://your-domain.lolipop.jp/packs/ogp-image.png"> <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Packa | 旅の準備を爆速にする共有荷造りリスト">
-    <meta name="twitter:description" content="旅行の荷造りをURL一つでスマートに共有！">
+    <meta property="og:title" content="Packa | 旅の準備を爆速にする共有荷造りリスト">
+    <meta property="og:image" content="ogp-image.png">
+    <meta name="twitter:card" content="summary_large_image">
 
     <link rel="icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
     <link rel="stylesheet" href="css/style.css">
+
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
 
@@ -36,7 +31,9 @@
         <div class="input-group">
             宿泊数: <input type="number" v-model="stayDays" min="0"> 泊
         </div>
-        <button class="btn btn-primary" @click="generateList">リストを作成する</button>
+        
+        <button class="btn btn-primary" @click="generateList">おすすめリストを作成</button>
+        <button class="btn btn-outline" @click="createEmptyList" style="margin-top: 10px;">自分で0から作成する</button>
     </div>
 
     <div v-else>
@@ -44,29 +41,42 @@
             {{ currentScope === 'domestic' ? '国内' : '海外' }} / {{ stayDays }}泊 
             <span v-if="mode === 'view'">(共有モード)</span>
         </div>
+        
         <div v-if="mode !== 'setup'" class="add-box">
-            <input type="text" v-model="newItemName" placeholder="足りないものを追加..." @keyup.enter="addItem">
+            <input type="text" ref="addInput" v-model="newItemName" placeholder="アイテムを追加..." @keyup.enter="addItem">
             <button @click="addItem">＋</button>
         </div>
 
-        <ul class="item-list">
-            <li v-for="(item, index) in items" :key="index" class="item">
-                <div class="item-content" @click="item.checked = !item.checked">
-                    <input type="checkbox" v-model="item.checked" @click.stop>
-                    <span>{{ item.item_name }}</span>
+        <ul id="sort-list" class="item-list">
+            <li v-for="(item, index) in items" :key="item.item_name" class="item">
+                <div class="item-content">
+                    <span class="drag-handle">⣿</span>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" v-model="item.checked">
+                        <span class="custom-check"></span>
+                        <span class="item-text" :class="{ checked: item.checked }">{{ item.item_name }}</span>
+                    </label>
                 </div>
                 <button class="delete-btn" @click="removeItem(index)" title="削除">×</button>
             </li>
-        </ul>
-
+        </ul>        
         <div v-if="mode === 'list'">
             <button class="btn btn-success" @click="saveList" :disabled="processing">
                 {{ processing ? '保存中...' : 'URLを発行して保存' }}
             </button>
-            <div v-if="shareUrl" class="share-box">
-                🔗 共有URL（このURLを仲間に送る）：<br>
-                <a :href="shareUrl">{{ shareUrl }}</a>
+        <div v-if="shareUrl" class="share-box">
+            <p class="share-title">🔗 共有URL（このURLを仲間に送る）：</p>
+            <div class="url-copy-wrapper">
+                <input type="text" class="url-input" readonly :value="shareUrl" @click="$event.target.select()">
+                
+                <a :href="shareUrl" target="_blank" class="btn-open">開く</a>
+                
+                <button class="btn-copy" @click="copyToClipboard" :class="{ copied: copyStatus }">
+                    {{ copyStatus ? '完了' : 'コピー' }}
+                </button>
             </div>
+        </div>
         </div>
 
         <div v-if="mode === 'view'">
@@ -77,11 +87,11 @@
             <button class="btn btn-outline" @click="resetToSetup">新しくリストを作る</button>
         </div>
     </div>
+
     <footer>
-        <p>
-            <a href="#" @click.prevent="showTerms = true">利用規約</a>
-        </p>
-        <p>&copy; 2024 Ogawa Keito. All Rights Reserved.</p>
+        <p><a href="#" @click.prevent="showTerms = true">利用規約</a></p>
+        <p>&copy; 2024 Packa Project.</p>
+        <p>v2.0</p>
     </footer>
 
     <div v-if="showTerms" class="modal-overlay" @click.self="showTerms = false">
@@ -89,10 +99,8 @@
             <span class="modal-close" @click="showTerms = false">&times;</span>
             <h3>利用規約</h3>
             <div class="terms-text">
-                <p><strong>1. サービスの概要</strong><br>本サービス「Packa」は、旅行の持ち物リストを作成・共有するツールです。</p>
-                <p><strong>2. データの取扱い</strong><br>作成されたリストはサーバーに保存され、URLを知る全員が閲覧・編集可能です。個人情報の入力は控えてください。</p>
-                <p><strong>3. 免責事項</strong><br>本サービスの使用による忘れ物やトラブルについて、開発者は一切の責任を負いません。自己責任でご利用ください。</p>
-                <p><strong>4. 著作権</strong><br>本アプリの著作権は 製作者 に帰属します。</p>
+                <p><strong>1. サービスの概要</strong><br>Packaは旅行の持ち物リストを作成・共有するツールです。</p>
+                <p><strong>2. 免責事項</strong><br>本サービスの使用によるトラブルについて、運営者は責任を負いません。</p>
             </div>
             <button class="btn btn-primary" @click="showTerms = false">閉じる</button>
         </div>
