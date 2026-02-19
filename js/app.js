@@ -43,6 +43,7 @@ createApp({
                 alert('コピーに失敗しました');
             }
         };
+        
         // --- ★ ドラッグ機能の有効化関数 ---
         const initSortable = async () => {
             await nextTick(); // 画面描画待ち
