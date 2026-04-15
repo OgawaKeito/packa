@@ -1,1 +1,21 @@
+# --- 機密情報 ---
 db_config.php
+
+# --- 環境変数 ---
+.env
+.env.local
+.env.*.local
+
+# --- OS 系 ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- エディタ / IDE 系 ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- PHP 依存パッケージ ---
+vendor/
