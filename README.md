@@ -106,6 +106,6 @@ define('DB_CHARSET', 'utf8mb4');
 
 ---
 
-## 著作権
+## ライセンス
 
-Copyright © 2024 Ogawa Keito. All rights reserved.
+[MIT License](LICENSE)
