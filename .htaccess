@@ -1,11 +1,100 @@
-# --- HTTPSへの強制リダイレクト ---
-RewriteEngine on
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+# Packa サイト全体の設定。
+# サーバーに既に .htaccess がある場合は、上書きせず内容を見比べて統合すること。
+#
+# このフォルダは、親フォルダ(別サイト)の公開フォルダの下にあるため、親の .htaccess の設定も継承される。
+# 親は CSS/JS/画像に「1 年・immutable」のキャッシュを付けているので、下の「キャッシュ」で上書きしている。
 
-# --- db_config.php へのアクセス禁止 ---
-<Files "db_config.php">
-    deny from all
-</Files>
+# --- エラーページ ---
+ErrorDocument 403 /403.html
+ErrorDocument 404 /404.html
+ErrorDocument 500 /500.html
+ErrorDocument 503 /503.html
 
-Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # --- 正規のアドレスへの統一 ---
+    # このサイトの正規のアドレスは https://packa.ogawa.jp.net/ 。
+    # それ以外のホスト名(親フォルダの別のドメイン経由、サーバーの初期ドメインなど)は 404。
+    # http は、正規のアドレスの https へ 301 で転送する。
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteCond %{HTTP_HOST} !^packa\.ogawa\.jp\.net(:[0-9]+)?$ [NC]
+    RewriteRule ^ - [R=404,L]
+
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^(.*)$ https://packa.ogawa.jp.net/$1 [R=301,L]
+
+    # --- メンテナンスモード ---
+    # 更新作業のときだけ、下の 4 行の先頭の「#」を外す(全ページが 503 になる)。
+    # 作業が終わったら、また「#」を付けて元に戻す。
+    # RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    # RewriteCond %{REQUEST_URI} !^/503\.html$
+    # RewriteCond %{REQUEST_URI} !^/(robots\.txt)$
+    # RewriteRule ^ - [R=503,L]
+
+    # --- 公開してよいファイルだけを許可(許可リスト方式) ---
+    # ここに無い URL はすべて 404 を返す。設定ファイル、README、SQL、ツール類は外から見えない。
+    # ページ、画像、CSS/JS を追加したときは、下の該当行に名前を足すこと。
+    # (最初の条件は、エラーページを表示するための内部転送には適用しないためのもの)
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteCond %{REQUEST_URI} !^/(403|404|500|503)\.html$
+    RewriteCond %{REQUEST_URI} !^/$
+    RewriteCond %{REQUEST_URI} !^/index\.html$
+    RewriteCond %{REQUEST_URI} !^/(api|save|update)\.php$
+    RewriteCond %{REQUEST_URI} !^/css/style\.css$
+    RewriteCond %{REQUEST_URI} !^/js/app\.js$
+    RewriteCond %{REQUEST_URI} !^/favicon\.ico$
+    RewriteRule ^ - [R=404,L]
+</IfModule>
+
+# --- キャッシュ ---
+# CSS/JS はファイル名にバージョンが付いていないので、短めにする(更新が数日で反映される)。
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 day"
+    ExpiresByType application/javascript "access plus 1 day"
+    ExpiresByType text/javascript "access plus 1 day"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+
+# --- セキュリティヘッダー ---
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=2592000"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+
+    # 親フォルダの「1 年・immutable」を、ここで上書きする。
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
+    <FilesMatch "\.(jpe?g|png|webp|svg)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+
+    # まずは「Report-Only」(違反をブラウザのコンソールに出すだけで、何も止めない)。
+    # コンソールに違反が出なくなったことを確認してから、「Content-Security-Policy」に切り替える。
+    # Vue を使っている場合に備えて 'unsafe-eval' を入れてある。違反が出なければ外してよい。
+    Header set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+</IfModule>
+
+# --- 二重の防御(mod_rewrite が使えないサーバーでも効く) ---
+# 上の許可リストと同じ目的。どちらか一方が効かなくても、外に出てはいけないものは出ない。
+<IfModule mod_authz_core.c>
+    # 隠しファイル、書類、ログ、バックアップ、SQL は、どこにあっても外から開けない
+    <FilesMatch "(^\.|\.(md|docx?|xlsx?|pdf|log|bak|orig|old|sql|zip|gz|lock|ya?ml|ini|sh|ps1)$|~$)">
+        Require all denied
+    </FilesMatch>
+    # PHP は、公開してよいものだけが実行できる(設定ファイルや部品は実行も取得もできない)
+    <FilesMatch "\.(php|phtml|phps|inc)$">
+        Require all denied
+    </FilesMatch>
+    <FilesMatch "^(api|save|update)\.php$">
+        Require all granted
+    </FilesMatch>
+</IfModule>
